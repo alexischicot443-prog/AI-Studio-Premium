@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-[100dvh] bg-black text-slate-100 overflow-x-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Balises PWA indispensables -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>AI Studio - Premium Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Google Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Marked.js pour le Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 99px; }
+        
+        .ai-response p { margin-bottom: 0.5rem; line-height: 1.5; color: #cbd5e1; }
+        .ai-response p:last-child { margin-bottom: 0; }
+        .ai-response code { background-color: rgba(255, 255, 255, 0.08); padding: 2px 4px; border-radius: 4px; color: #f43f5e; font-size: 0.85em; }
+        
+        .ai-response pre { 
+            background-color: #09090b; 
+            padding: 2.2rem 0.85rem 0.85rem 0.85rem; 
+            border-radius: 10px; 
+            overflow-x: auto; 
+            margin: 0.75rem 0; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            position: relative;
+        }
+        .ai-response pre code { background-color: transparent; padding: 0; color: #e2e8f0; font-size: 0.8rem; }
+        .ai-response ul, .ai-response ol { margin-left: 1.25rem; margin-bottom: 0.5rem; color: #cbd5e1; }
+        .ai-response li { margin-bottom: 0.25rem; }
+        .ai-response h1, .ai-response h2, .ai-response h3 { font-weight: 700; color: #ffffff; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .ai-response h1 { font-size: 1.15rem; }
+        .ai-response h2 { font-size: 1.05rem; }
+        .ai-response h3 { font-size: 0.95rem; }
+    </style>
+</head>
+<body class="h-[100dvh] w-full flex flex-col overflow-hidden overflow-x-hidden select-none bg-gradient-to-b from-zinc-950 via-zinc-900 to-black">
+
+    <header class="h-14 border-b border-white/[0.06] px-4 flex items-center justify-between shrink-0 bg-zinc-950 z-10">
+        <div class="flex items-center gap-3">
+            <div class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[11px] font-bold tracking-[0.12em] text-white uppercase">AI Studio</span>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="activeModelLabel" class="text-[9px] font-mono text-zinc-400 bg-white/[0.04] border border-white/[0.08] px-1.5 py-0.2 rounded">gemini-2.5-flash</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="toggleSidebar" class="h-9 w-9 flex items-center justify-center bg-white/[0.04] active:bg-white/[0.1] border border-white/[0.08] rounded-xl text-zinc-300 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+            </svg>
+        </button>
+    </header>
+
+    <aside id="sidebar" class="fixed inset-y-0 right-0 w-72 bg-zinc-950 border-l border-white/[0.08] p-5 flex flex-col justify-between gap-6 z-30 transform translate-x-full transition-transform duration-200 ease-out shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
+        <div class="space-y-5">
+            <div class="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                <h2 class="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Configuration</h2>
+                <button id="closeSidebar" class="h-8 w-8 flex items-center justify-center rounded-lg active:bg-white/[0.05] text-zinc-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="modelSelect" class="block text-[10px] font-semibold tracking-wider uppercase text-zinc-400">Modèle intelligent</label>
+                <div class="relative">
+                    <select id="modelSelect" class="w-full bg-zinc-900 border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none appearance-none cursor-pointer">
+                        <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-zinc-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex justify-between items-center">
+                    <label for="tempSlider" class="text-[10px] font-semibold tracking-wider uppercase text-zinc-400">Créativité (Temp)</label>
+                    <span id="tempValue" class="text-[10px] font-mono bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.2 rounded text-indigo-400">0.7</span>
+                </div>
+                <input id="tempSlider" type="range" min="0" max="2" step="0.1" value="0.7" class="w-full h-1 bg-zinc-800 rounded-lg appearance-none accent-indigo-500">
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="systemPrompt" class="block text-[10px] font-semibold tracking-wider uppercase text-zinc-400">Instructions Système</label>
+                <textarea id="systemPrompt" rows="4" class="w-full bg-zinc-900 border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none resize-none placeholder-zinc-600" placeholder="Ex: Tu es un expert concis..."></textarea>
+            </div>
+        </div>
+
+        <button id="clearBtn" class="w-full border border-rose-500/30 active:bg-rose-500/10 text-rose-400 rounded-xl py-2.5 text-xs font-medium">
+            Effacer la session
+        </button>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-h-0 relative z-10">
+        <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4 select-text">
+            <div class="flex items-start gap-3 max-w-2xl mx-auto bg-white/[0.02] border border-white/[0.05] p-3.5 rounded-xl">
+                <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-white"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 21l8.982-8.982M18 13.636l.53-.53A5.981 5.981 0 0 0 18 4.5h-2.25A5.981 5.981 0 0 0 9.75 9.75V12" /></svg>
+                </div>
+                <div class="space-y-0.5">
+                    <p class="text-[11px] font-bold text-white tracking-wide">Studio Assistant</p>
+                    <p class="text-xs text-zinc-400 leading-relaxed">Bienvenue dans votre espace IA Studio. Configurez vos paramètres avancés et basculez instantanément de modèle via le menu supérieur.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 bg-zinc-950 border-t border-white/[0.04] shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
+            <div class="max-w-2xl mx-auto bg-zinc-900 border border-white/[0.08] rounded-xl flex items-end p-1.5 gap-1.5 focus-within:border-indigo-500/50 transition-all">
+                <textarea id="userInput" rows="1" class="flex-1 bg-transparent max-h-28 py-2 px-2.5 text-xs text-slate-100 focus:outline-none resize-none placeholder-zinc-500" placeholder="Posez votre question ici..."></textarea>
+                <button id="sendBtn" class="bg-indigo-600 active:bg-indigo-500 text-white h-9 w-9 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L6 12Zm0 0h7.5" /></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_KEY = "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";
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const modelSelect = document.getElementById('modelSelect');
+        const tempSlider = document.getElementById('tempSlider');
+        const tempValue = document.getElementById('tempValue');
+        const systemPrompt = document.getElementById('systemPrompt');
+        const clearBtn = document.getElementById('clearBtn');
+        const activeModelLabel = document.getElementById('activeModelLabel');
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        let conversationHistory = [];
+
+        toggleSidebar.addEventListener('click', () => sidebar.classList.remove('translate-x-full'));
+        closeSidebar.addEventListener('click', () => sidebar.classList.add('translate-x-full'));
+        chatContainer.addEventListener('click', () => sidebar.classList.add('translate-x-full'));
+
+        tempSlider.addEventListener('input', (e) => tempValue.textContent = e.target.value);
+        modelSelect.addEventListener('change', (e) => activeModelLabel.textContent = e.target.value.split('/')[1] || e.target.value);
+
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 112) + 'px'; 
+        });
+
+        sendBtn.addEventListener('click', handleSend);
+
+        clearBtn.addEventListener('click', () => {
+            conversationHistory = [];
+            chatContainer.innerHTML = `
+                <div class="flex items-start gap-3 max-w-2xl mx-auto bg-white/[0.02] border border-white/[0.05] p-3.5 rounded-xl">
+                    <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-white"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 21l8.982-8.982M18 13.636l.53-.53A5.981 5.981 0 0 0 18 4.5h-2.25A5.981 5.981 0 0 0 9.75 9.75V12" /></svg>
+                    </div>
+                    <div class="space-y-0.5">
+                        <p class="text-[11px] font-bold text-white tracking-wide">Studio Assistant</p>
+                        <p class="text-xs text-zinc-400">Session réinitialisée avec succès.</p>
+                    </div>
+                </div>`;
+            sidebar.classList.add('translate-x-full');
+        });
+
+        function injectCodeCopyButtons(targetContainer) {
+            const codeBlocks = targetContainer.querySelectorAll('pre');
+            codeBlocks.forEach((preElement) => {
+                if (preElement.querySelector('.code-copy-trigger')) return;
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = "code-copy-trigger absolute top-1.5 right-1.5 bg-zinc-800/80 active:scale-95 border border-white/[0.06] text-[9px] font-bold text-zinc-400 px-2 py-0.5 rounded-md uppercase tracking-wider select-none transition-all";
+                copyBtn.innerText = "Copy";
+
+                copyBtn.addEventListener('click', async () => {
+                    const rawCode = preElement.querySelector('code') ? preElement.querySelector('code').innerText : preElement.innerText;
+                    try {
+                        await navigator.clipboard.writeText(rawCode);
+                        copyBtn.innerText = "Copié !";
+                        copyBtn.classList.replace('text-zinc-400', 'text-emerald-400');
+                        copyBtn.classList.add('bg-emerald-500/10', 'border-emerald-500/20');
+
+                        setTimeout(() => {
+                            copyBtn.innerText = "Copy";
+                            copyBtn.classList.replace('text-emerald-400', 'text-zinc-400');
+                            copyBtn.classList.remove('bg-emerald-500/10', 'border-emerald-500/20');
+                        }, 1600);
+                    } catch (err) {
+                        copyBtn.innerText = "Erreur";
+                    }
+                });
+                preElement.appendChild(copyBtn);
+            });
+        }
+
+        async function handleSend() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            setLoadingState(true);
+            appendMessage('user', query);
+            conversationHistory.push({ role: 'user', content: query });
+            
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            const aiMessageElement = appendMessage('assistant', '<div class="flex space-x-1.5 py-1.5 px-0.5"><span class="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce [animation-duration:0.8s]"></span><span class="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></span><span class="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></span></div>');
+
+            const finalMessages = [];
+            if (systemPrompt.value.trim()) {
+                finalMessages.push({ role: 'system', content: systemPrompt.value.trim() });
+            }
+            finalMessages.push(...conversationHistory);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: modelSelect.value,
+                        temperature: parseFloat(tempSlider.value),
+                        messages: finalMessages
+                    })
+                });
+
+                if (!response.ok) throw new Error();
+
+                const data = await response.json();
+                const aiResponseText = data.choices[0].message.content;
+
+                conversationHistory.push({ role: 'assistant', content: aiResponseText });
+                
+                const responseBox = aiMessageElement.querySelector('.ai-response');
+                responseBox.innerHTML = marked.parse(aiResponseText);
+                injectCodeCopyButtons(responseBox);
+
+            } catch (error) {
+                aiMessageElement.querySelector('.ai-response').innerHTML = `<span class="text-rose-400 text-[11px] border border-rose-500/20 bg-rose-500/5 px-2.5 py-1 rounded-xl block">Erreur : Impossible de joindre l'API.</span>`;
+            } finally {
+                setLoadingState(false);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        function appendMessage(role, content) {
+            const isUser = role === 'user';
+            const msgWrapper = document.createElement('div');
+            msgWrapper.className = `flex items-start gap-3 max-w-2xl mx-auto w-full ${isUser ? 'flex-row-reverse' : ''}`;
+
+            const avatar = isUser 
+                ? `<div class="h-8 w-8 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 text-zinc-300"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                   </div>`
+                : `<div class="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 text-white"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 21l8.982-8.982M18 13.636l.53-.53A5.981 5.981 0 0 0 18 4.5h-2.25A5.981 5.981 0 0 0 9.75 9.75V12" /></svg>
+                   </div>`;
+
+            const parsedContent = isUser ? content : marked.parse(content);
+            const currentModelName = modelSelect.options[modelSelect.selectedIndex].text.split(' ')[0];
+
+            msgWrapper.innerHTML = `
+                ${avatar}
+                <div class="space-y-0.5 max-w-[85%] ${isUser ? 'text-right' : ''}">
+                    <div class="text-[9px] font-medium text-zinc-500 tracking-wider">${isUser ? 'VOUS' : currentModelName.toUpperCase()}</div>
+                    <div class="text-xs ${isUser ? 'bg-indigo-600 border border-indigo-500/30 text-white px-3.5 py-2 rounded-2xl inline-block text-left' : 'text-slate-300 ai-response w-full'}">
+                        ${parsedContent}
+                    </div>
+                </div>
+            `;
+
+            chatContainer.appendChild(msgWrapper);
+            
+            if (!isUser && !content.includes('animate-bounce')) {
+                injectCodeCopyButtons(msgWrapper.querySelector('.ai-response'));
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return msgWrapper;
+        }
+
+        function setLoadingState(isLoading) {
+            sendBtn.disabled = isLoading;
+            userInput.disabled = isLoading;
+        }
+
+        // ENREGISTREMENT DU SERVICE WORKER PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA Service Worker actif.'))
+                    .catch(err => console.warn('Erreur d\'enregistrement du Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
